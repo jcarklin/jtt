@@ -20,6 +20,27 @@ class Tablet {
     return nonNegative % length;
   }
 
+  turn() {
+    _picks.add(_nextPick);
+    _nextPick = null;  
+  }
+
+  bool isReadyToTurn() {
+    return _nextPick==null;
+  }
+
+  prepareTurn(bool isForward, bool sTwist) {
+    List<Thread> nextState = List(_picks.last.threadsState.length);
+    if (isForward) {
+      nextState.add(_picks.last.threadsState[nextState.length]);
+      nextState.addAll(_picks.last.threadsState.sublist(0,nextState.length-1));
+    } else {
+      nextState.addAll(_picks.last.threadsState.sublist(1,nextState.length));
+      nextState.add(_picks.last.threadsState[0]);      
+    }
+    _nextPick = Pick(sTwist, isForward, UnmodifiableListView(nextState), this);
+  }
+
   @override
   String toString() {
     String colours = _clockwise?'Clockwise':'Anticlockwise';
@@ -32,6 +53,8 @@ class Tablet {
      
     return (_picks[0].sTwist?'S - '+_picks[0].toString():'Z - '+_picks[0].toString())+colours;
   }
+
+  
 }
   
 class Thread {
