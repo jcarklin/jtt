@@ -1,20 +1,30 @@
 import 'dart:collection';
 
+import 'package:jtt_commandline/src/project.dart';
 import 'package:jtt_commandline/src/tablet.dart';
 
 main(List<String> arguments) {
+  
+  Project firstProject = new Project();
+  Deck deck = firstProject.createDeck(10, 4);
+  print('Deck has been created');
+  print('======================');
+  firstProject.printDeck();
 
-  List<Thread> threads = List();
-  threads.add(Thread('Red')); 
-  threads.add(Thread('Green')); 
-  threads.add(Thread('Blue')); 
-  threads.add(Thread('Yellow'));
+  firstProject.deck.cards.forEach((tablet)=>tablet.threadTablet(0, Thread('red')));
+  print('First thread set to red');
+  print('======================');
+  firstProject.printDeck();
 
-  Tablet tablet = Tablet(UnmodifiableListView(threads), true, true);
-  print(tablet);
-  tablet = Tablet(UnmodifiableListView(threads), true, false);
-  print(tablet);
+  firstProject.deck.cards.forEach((tablet)=>tablet.prepareTurn(true, true));
+  print('Deck prepared for turning');
+  print('======================');
+  firstProject.printDeck();
 
+  firstProject.deck.turnCards();
+  print('Deck Turned');
+  print('======================');
+  firstProject.printDeck();
 }
 
 

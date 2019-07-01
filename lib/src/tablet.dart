@@ -1,59 +1,52 @@
-import 'dart:collection';
-
 class Tablet {
-  UnmodifiableListView<Thread> _threads; //limited to number of holes, immutable 
+  List<Thread> _threads; //limited to number of holes, immutable 
   List<Pick> _picks = List();
   Pick _nextPick;
-  bool _clockwise=true;
   
-
-  Tablet(this._threads, bool sTwist, this._clockwise) {
-      _picks.add(Pick(sTwist, false, _threads, this));
-      _nextPick==null;
+  Tablet(bool sTwist, int numHoles) {
+      _threads = List(numHoles);
+      _nextPick = Pick(sTwist, null, null, this);
   }
 
-  bool get clockwise => _clockwise;
-
-  int getIndexInRange(index, length) {
-    var trim = index % length;
-    var nonNegative = trim + length;
-    return nonNegative % length;
+  threadTablet(int threadIndex, Thread thread) {
+      _threads[threadIndex] = thread;
   }
 
-  turn() {
+  turnTablet() {
     _picks.add(_nextPick);
     _nextPick = null;  
   }
 
   bool isReadyToTurn() {
+    if (_picks.isEmpty) {
+      _picks.add(_nextPick);
+      _nextPick == null;
+    }
     return _nextPick==null;
   }
 
   prepareTurn(bool isForward, bool sTwist) {
-    List<Thread> nextState = List(_picks.last.threadsState.length);
-    if (isForward) {
-      nextState.add(_picks.last.threadsState[nextState.length]);
-      nextState.addAll(_picks.last.threadsState.sublist(0,nextState.length-1));
-    } else {
-      nextState.addAll(_picks.last.threadsState.sublist(1,nextState.length));
-      nextState.add(_picks.last.threadsState[0]);      
+    if (!isReadyToTurn()) {
+      List<int> nextState = List();
+      if (isForward) {
+        nextState.add(_picks.last._threadsState[nextState.length]);
+        nextState.addAll(_picks.last._threadsState.sublist(0,nextState.length-1));
+      } else {
+        nextState.addAll(_picks.last._threadsState.sublist(1,nextState.length));
+        nextState.add(_picks.last._threadsState[0]);      
+      }
+      _nextPick = Pick(sTwist, isForward, nextState, this);
     }
-    _nextPick = Pick(sTwist, isForward, UnmodifiableListView(nextState), this);
   }
 
   @override
   String toString() {
-    String colours = _clockwise?'Clockwise':'Anticlockwise';
-    int index;
-    
-    for(int i = 0; i < _threads.length; i++) {
-      index = getIndexInRange(_clockwise?0 + i:0-i, _threads.length);
-      colours += '\n$i: '+_threads[index].colour;
-    }
-     
-    return (_picks[0].sTwist?'S - '+_picks[0].toString():'Z - '+_picks[0].toString())+colours;
+    Pick printPick = isReadyToTurn()?_picks.last:_nextPick;
+    String to = (isReadyToTurn()?'Card is ready to turn!':'Turn is complete ') + printPick.toString();
+    to += _threads.isEmpty?'No threads yet':_threads.toString();
+    to += '\n';
+    return to;
   }
-
   
 }
   
@@ -62,8 +55,6 @@ class Thread {
   String _colour;
 
   Thread(this._colour);
-
-  String get colour => _colour;
 
   set colour(String colour) {
     _colour = colour;
@@ -77,15 +68,16 @@ class Thread {
 }
 
 class Pick {
-  bool sTwist; //S or Z 
-  bool turnedForward;//Forwards or Backwards
-  UnmodifiableListView<Thread> threadsState;
-  Tablet parentCard;
+  bool _sTwist; //S or Z 
+  bool _turnedForward;//Forwards or Backwards
+  List<int> _threadsState;
+  Tablet _parentCard;
 
-  Pick(this.sTwist, this.turnedForward, this.threadsState, this.parentCard);
+  Pick(this._sTwist, this._turnedForward, this._threadsState, this._parentCard);
 
   @override
   String toString() {
-    return (sTwist==turnedForward)?'/':'\\';
+    String to = _sTwist?'S - ':'Z - ';
+    return to + ((_sTwist==_turnedForward)?'/':'\\');
   }
 }
