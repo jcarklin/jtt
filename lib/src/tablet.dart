@@ -4,8 +4,8 @@ class Tablet {
   Pick _nextPick;
   
   Tablet(bool sTwist, int numHoles) {
-      _threads = List(numHoles);
-      _nextPick = Pick(sTwist, null, null, this);
+      _threads = List.generate(numHoles, (holeIndex)=>Thread(holeIndex,null) );
+      _picks.add(Pick(sTwist, null, _threads.map((thread)=> thread.cardIndex).toList(), this));
   }
 
   threadTablet(int threadIndex, Thread thread) {
@@ -18,32 +18,28 @@ class Tablet {
   }
 
   bool isReadyToTurn() {
-    if (_picks.isEmpty) {
-      _picks.add(_nextPick);
-      _nextPick == null;
-    }
-    return _nextPick==null;
+    return _nextPick!=null;
   }
 
-  prepareTurn(bool isForward, bool sTwist) {
+  prepareTurn(bool isForward, {bool sTwist}) {
     if (!isReadyToTurn()) {
       List<int> nextState = List();
       if (isForward) {
-        nextState.add(_picks.last._threadsState[nextState.length]);
-        nextState.addAll(_picks.last._threadsState.sublist(0,nextState.length-1));
+        nextState.addAll(_picks.last._threadsState.sublist(0,_threads.length-1));
+        nextState.insert(0,_picks.last._threadsState[_threads.length-1]);
       } else {
-        nextState.addAll(_picks.last._threadsState.sublist(1,nextState.length));
+        nextState.addAll(_picks.last._threadsState.sublist(1));
         nextState.add(_picks.last._threadsState[0]);      
       }
-      _nextPick = Pick(sTwist, isForward, nextState, this);
+      _nextPick = Pick(sTwist==null?_picks.last.sTwist:sTwist, isForward, nextState, this);
     }
   }
 
   @override
   String toString() {
-    Pick printPick = isReadyToTurn()?_picks.last:_nextPick;
-    String to = (isReadyToTurn()?'Card is ready to turn!':'Turn is complete ') + printPick.toString();
-    to += _threads.isEmpty?'No threads yet':_threads.toString();
+    Pick printPick = _picks.last;
+    String to = (isReadyToTurn()?'Ready to turn':'Not ready for turning') + '\t'+ printPick.toString();
+    printPick._threadsState.forEach((threadIndex)=> to += _threads[threadIndex].toString()+', ');
     to += '\n';
     return to;
   }
@@ -51,10 +47,14 @@ class Tablet {
 }
   
 class Thread {
-  int indexOnCard;
+  int _indexOnCard;
   String _colour;
 
-  Thread(this._colour);
+  Thread(this._indexOnCard, this._colour);
+
+  int get cardIndex => _indexOnCard;
+
+  String get colour => _colour;
 
   set colour(String colour) {
     _colour = colour;
@@ -62,7 +62,7 @@ class Thread {
 
   @override
   String toString() {
-    return _colour;
+    return ('['+(colour==null?'':colour)+']');
   }
 
 }
@@ -75,9 +75,11 @@ class Pick {
 
   Pick(this._sTwist, this._turnedForward, this._threadsState, this._parentCard);
 
+  get sTwist => _sTwist;
+
   @override
   String toString() {
-    String to = _sTwist?'S - ':'Z - ';
-    return to + ((_sTwist==_turnedForward)?'/':'\\');
+    String to = ('Twist: ' + (_sTwist?'- S - ':'- Z - '));
+    return to + (_turnedForward==null?'':((_sTwist==_turnedForward)?' / ':' \\ '));
   }
 }
