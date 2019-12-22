@@ -7,48 +7,77 @@ enum TurnDirection {
   FORWARD,BACKWARD,NONE
 }
 
-class Tablet {
-  UnmodifiableListView<Thread> _threads; //limited to number of holes, immutable 
-  bool _clockwise=true;
-  bool _sTwist; //S or Z 
-  TurnDirection _turnedDir;//Forwards or Backwards
+enum Twist {
+  S_TWIST, Z_TWIST
+}
 
-  Tablet(List<Thread> threads, this._sTwist, this._clockwise) {
-    this._threads = new UnmodifiableListView(threads);
+class Tablet {
+
+  UnmodifiableListView<Thread> _threads; //limited to number of holes, immutable 
+  int _deckIndex;
+  Twist _twist; //S or Z
+
+  //When both are none is is probably at start of weaving
+  TurnDirection _lastTurn=TurnDirection.NONE;
+  TurnDirection _nextTurn=TurnDirection.NONE;
+
+  Tablet(this._deckIndex, int holeCount, this._twist) {
+    
+    List<Thread> threadList = List(holeCount);
+    for (int i=0; i<holeCount; i++) {
+      threadList[i] = new Thread(i,"none");
+    }
+    _threads = new UnmodifiableListView(threadList);
   }
 
-  bool get clockwise => _clockwise;
-  set twist(bool twist) {this._sTwist = twist;}
-  set turnDirection(TurnDirection direction) {this._turnedDir = direction;}
+  Tablet._(List<Thread> threadList, this._twist, TurnDirection turnDirection){
+    _threads = new UnmodifiableListView(threadList);
+    _nextTurn = TurnDirection.NONE;
+    _lastTurn = turnDirection;
+  }
+
+  threadTablet(int threadIndex, String colour) {
+    _threads[threadIndex].colour=colour;
+  }
+
+  set twist(Twist twist) {this._twist = twist;}
+  set turnDirection(TurnDirection direction) {this._nextTurn = direction;}
 
   int getIndexInRange(index, length) {
     var trim = index % length;
     var nonNegative = trim + length;
     return nonNegative % length;
   }
-
+  
   String getAngle() {
-    return (_sTwist &&_turnedDir==TurnDirection.FORWARD)?'/':'\\';
+    if (_lastTurn==TurnDirection.NONE) {
+      return '|';
+    }
+    return (_twist==Twist.S_TWIST &&_lastTurn==TurnDirection.FORWARD)?'/':'\\';
   }
 
+  Tablet turn() {
+    int i = 1 % _threads.length;
+    List<Thread> threadList = _threads.sublist(i)..addAll(_threads.sublist(0, i));
+    return new Tablet._(threadList, _twist, _nextTurn);
+  }
+  
+
   @override
-  String toString() {
-    String colours = _clockwise?'Clockwise':'Anticlockwise';
-    int index;
-    
-    for(int i = 0; i < _threads.length; i++) {
-      index = getIndexInRange(_clockwise?0 + i:0-i, _threads.length);
-      colours += '\n$i: '+_threads[index].colour;
-    }
-     
-    return ((_sTwist?'S - ':'Z - ')+ getAngle() + colours);
+  String toString() {   
+    return ('\nCard Number $_deckIndex: '+(_twist==Twist.S_TWIST?'S - ':'Z - ')+ getAngle())+'\n'+_threads.toString();
+  }
+
+  getColour() {
+    return _threads[1].colour;
   }
 }
   
 class Thread {
   String _colour;
-
-  Thread(this._colour);
+  int _holeIndex;
+  
+  Thread(this._holeIndex, this._colour);
 
   String get colour => _colour;
 
@@ -58,7 +87,7 @@ class Thread {
 
   @override
   String toString() {
-    return _colour;
+    return "Thread ${_holeIndex}: ${_colour}\n";
   }
 
 }

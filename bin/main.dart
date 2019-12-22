@@ -1,24 +1,36 @@
+import 'package:jtt_commandline/src/project.dart';
 import 'package:jtt_commandline/src/tablet.dart';
 
 main(List<String> arguments) {
 
-  List<Thread> threads = List();
-  threads.add(Thread('Red')); 
-  threads.add(Thread('Green')); 
-  threads.add(Thread('Blue')); 
-  threads.add(Thread('Yellow'));
+  Project project = Project(4, 10, 0);
+  project.printDeck();
+  //Thread cards
+  for (int i=0; i<project.deck.length; i++) {
+    project.threadTablet(i, 0, "Red");
+    project.threadTablet(i, 1, "Black");
+    project.threadTablet(i, 2, "Black");
+    project.threadTablet(i, 3, "Red");
+    if (i%2==0) {
+      project.twistTablet(i, Twist.Z_TWIST);
+    }
+  }
 
-  Tablet tablet = Tablet(threads, true, true);
-  print(tablet);
-  tablet = Tablet(threads, true, false);
-  print(tablet);
-  tablet = Tablet(threads, false, true);
-  tablet.turnDirection=TurnDirection.FORWARD;
-  print(tablet);
-
-  tablet = Tablet(threads, false, false);
-  tablet.turnDirection=TurnDirection.BACKWARD;
-  print(tablet);
+  project.printDeck();
+  //prepare to turn all cards forward
+  for (int i=0; i<project.deck.length; i++) {
+    project.prepareTurn(i, TurnDirection.FORWARD);
+  } 
+  //Turn cards
+  project.turnDeck();
+  project.printPicks();
+  //prepare to turn all cards forward
+  for (int i=0; i<project.deck.length; i++) {
+    project.prepareTurn(i, TurnDirection.FORWARD);
+  } 
+  project.turnDeck();
+  project.printPicks();
+  
 }
 
 
