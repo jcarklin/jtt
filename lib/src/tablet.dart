@@ -49,11 +49,19 @@ class Tablet {
     return nonNegative % length;
   }
   
-  String getAngle() {
+  String _printAngle() {
     if (_lastTurn==TurnDirection.NONE) {
       return '|';
     }
     return (_twist==Twist.S_TWIST &&_lastTurn==TurnDirection.FORWARD)?'/':'\\';
+  }
+
+  String _printTwist() {
+    return (_twist==Twist.S_TWIST?'S - ':'Z - ');  
+  }
+
+  String printPick() {
+    return '$_printAngle() $getColour()';
   }
 
   Tablet turn() {
@@ -65,7 +73,7 @@ class Tablet {
 
   @override
   String toString() {   
-    return ('\nCard Number $_deckIndex: '+(_twist==Twist.S_TWIST?'S - ':'Z - ')+ getAngle())+'\n'+_threads.toString();
+    return ('\nCard Number $_deckIndex: $_printAngle() $_printTwist()'+'\n'+_threads.toString());
   }
 
   getColour() {

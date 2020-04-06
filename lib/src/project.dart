@@ -59,7 +59,6 @@ class Pick {
 
   @override
   String toString() {
-    var mappedNames = deck.map((n) => ' ${n.getAngle()} (${n.getColour()})');
-    return mappedNames.toString()+'\n';
+    return(deck.map((f) => f.printPick()).toList().reduce((value, element) => value + ' ~ ' + element));
   }
 }
